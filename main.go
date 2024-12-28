@@ -99,9 +99,10 @@ func process(typeName, fileName, lineNum, packageName string) error {
 	defer file.Close()
 
 	tmpl.Execute(file, struct {
-		Type   string
-		Values map[string]string
-	}{typeName, specs})
+		Package string
+		Type    string
+		Values  map[string]string
+	}{packageName, typeName, specs})
 
 	return nil
 }
