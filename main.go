@@ -49,7 +49,7 @@ func main() {
 		lineNum     = os.Getenv("GOLINE")
 		packageName = os.Getenv("GOPACKAGE")
 	)
-	flag.Var(&values, "value", "overwrite inferred enum strings")
+	flag.Var(&values, "values", "overwrite inferred enum strings")
 	flag.StringVar(&typeName, "type", "", "type to be generated for")
 	flag.BoolVar(&text, "text", false, "generate db text marshal/unmarshal")
 	flag.BoolVar(&db, "db", false, "generate db scanner/valuer")
