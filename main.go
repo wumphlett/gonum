@@ -25,6 +25,9 @@ var tText string
 //go:embed enum_db.go.template
 var tDb string
 
+//go:embed enum_text_db.go.template
+var tTextDb string
+
 func main() {
 	var (
 		typeName    string
@@ -99,13 +102,13 @@ func process(typeName, fileName, lineNum, packageName string, db, text bool) err
 
 	var tmplFile string
 	if db && text {
-		tmplFile = tDb
+		tmplFile = tTextDb
 	} else if !db && text {
 		tmplFile = tText
-	} else if !db && !text {
-		tmplFile = t
+	} else if db && !text {
+		tmplFile = tDb
 	} else {
-		return errors.New("unable to find template given flags")
+		tmplFile = t
 	}
 
 	tmpl, err := template.New(typeName).Parse(tmplFile)
