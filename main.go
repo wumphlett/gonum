@@ -28,8 +28,20 @@ var tDb string
 //go:embed enum_text_db.go.template
 var tTextDb string
 
+type Values []string
+
+func (v *Values) String() string {
+	return strings.Join(*v, ",")
+}
+
+func (v *Values) Set(value string) error {
+	*v = strings.Split(value, ",")
+	return nil
+}
+
 func main() {
 	var (
+		values      Values
 		typeName    string
 		text        bool
 		db          bool
@@ -37,18 +49,19 @@ func main() {
 		lineNum     = os.Getenv("GOLINE")
 		packageName = os.Getenv("GOPACKAGE")
 	)
+	flag.Var(&values, "value", "overwrite inferred enum strings")
 	flag.StringVar(&typeName, "type", "", "type to be generated for")
 	flag.BoolVar(&text, "text", false, "generate db text marshal/unmarshal")
 	flag.BoolVar(&db, "db", false, "generate db scanner/valuer")
 	flag.Parse()
 
-	if err := process(typeName, fileName, lineNum, packageName, db, text); err != nil {
+	if err := process(values, typeName, fileName, lineNum, packageName, db, text); err != nil {
 		os.Stderr.WriteString(err.Error() + "\n")
 		os.Exit(1)
 	}
 }
 
-func process(typeName, fileName, lineNum, packageName string, db, text bool) error {
+func process(values Values, typeName, fileName, lineNum, packageName string, db, text bool) error {
 	if typeName == "" || fileName == "" || lineNum == "" || packageName == "" {
 		return errors.New("missing parameters")
 	}
@@ -80,7 +93,7 @@ func process(typeName, fileName, lineNum, packageName string, db, text bool) err
 			return false
 		}
 
-		for _, astSpec := range node.Specs {
+		for i, astSpec := range node.Specs {
 			spec, ok := astSpec.(*ast.ValueSpec)
 			if !ok {
 				continue
@@ -90,7 +103,11 @@ func process(typeName, fileName, lineNum, packageName string, db, text bool) err
 				break
 			}
 
-			specs[spec.Names[0].Name] = strcase.ToSnake(strings.TrimPrefix(spec.Names[0].Name, typeName))
+			if len(values) > 0 && i+1 <= len(values) {
+				specs[spec.Names[0].Name] = values[i]
+			} else {
+				specs[spec.Names[0].Name] = strcase.ToSnake(strings.TrimPrefix(spec.Names[0].Name, typeName))
+			}
 		}
 
 		return false
