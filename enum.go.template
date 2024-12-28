@@ -14,17 +14,3 @@ func (e {{.Type}}) String() string {
 		return ""
 	}
 }
-
-func (e {{.Type}}) MarshalText() ([]byte, error) {
-	return []byte(e.String()), nil
-}
-
-func (e *{{.Type}}) UnmarshalText(text []byte) error {
-    switch string(text) {   {{range $k, $v := .Values}}
-    case "{{$v}}":
-    	*e = {{$k}}{{end}}
-    default:
-        return ErrUnknown{{.Type}}
-    }
-    return nil
-}

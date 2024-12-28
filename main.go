@@ -19,28 +19,33 @@ import (
 //go:embed enum.go.template
 var t string
 
+//go:embed enum_text.go.template
+var tText string
+
 //go:embed enum_db.go.template
 var tDb string
 
 func main() {
 	var (
 		typeName    string
+		text        bool
 		db          bool
 		fileName    = os.Getenv("GOFILE")
 		lineNum     = os.Getenv("GOLINE")
 		packageName = os.Getenv("GOPACKAGE")
 	)
 	flag.StringVar(&typeName, "type", "", "type to be generated for")
+	flag.BoolVar(&text, "text", false, "generate db text marshal/unmarshal")
 	flag.BoolVar(&db, "db", false, "generate db scanner/valuer")
 	flag.Parse()
 
-	if err := process(typeName, fileName, lineNum, packageName, db); err != nil {
+	if err := process(typeName, fileName, lineNum, packageName, db, text); err != nil {
 		os.Stderr.WriteString(err.Error() + "\n")
 		os.Exit(1)
 	}
 }
 
-func process(typeName, fileName, lineNum, packageName string, db bool) error {
+func process(typeName, fileName, lineNum, packageName string, db, text bool) error {
 	if typeName == "" || fileName == "" || lineNum == "" || packageName == "" {
 		return errors.New("missing parameters")
 	}
@@ -93,10 +98,14 @@ func process(typeName, fileName, lineNum, packageName string, db bool) error {
 	}
 
 	var tmplFile string
-	if db {
+	if db && text {
 		tmplFile = tDb
-	} else {
+	} else if !db && text {
+		tmplFile = tText
+	} else if !db && !text {
 		tmplFile = t
+	} else {
+		return errors.New("unable to find template given flags")
 	}
 
 	tmpl, err := template.New(typeName).Parse(tmplFile)
