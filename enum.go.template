@@ -7,7 +7,8 @@ import "errors"
 var ErrUnknown{{.Type}} = errors.New("unknown {{.Type}}")
 
 func (e {{.Type}}) String() string {
-	switch e {  {{range $k, $v := .Values}}case {{$k}}:
+	switch e {  {{range $k, $v := .Values}}
+	case {{$k}}:
 	    return "{{$v}}"{{end}}
 	default:
 		return ""
@@ -15,13 +16,13 @@ func (e {{.Type}}) String() string {
 }
 
 func (e {{.Type}}) MarshalText() ([]byte, error) {
-	return []byte(e.String())
+	return []byte(e.String()), nil
 }
 
 func (e *{{.Type}}) UnmarshalText(text []byte) error {
     switch string(text) {   {{range $k, $v := .Values}}
-    	case "{{$v}}":
-    	    *e = {{$k}}(i){{end}}
+    case "{{$v}}":
+    	*e = {{$k}}{{end}}
     default:
         return ErrUnknown{{.Type}}
     }

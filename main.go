@@ -92,7 +92,7 @@ func process(typeName, fileName, lineNum, packageName string) error {
 		return err
 	}
 
-	file, err := os.Create(filepath.Join(filepath.Dir(fileName), strcase.ToSnake(strings.ToLower(typeName))) + "_enum.go")
+	file, err := os.Create(filepath.Join(filepath.Dir(fileName), strcase.ToSnake(typeName)) + "_enum.go")
 	if err != nil {
 		panic(err)
 	}
