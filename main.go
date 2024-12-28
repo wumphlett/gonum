@@ -54,7 +54,7 @@ func process(typeName, fileName, lineNum, packageName string) error {
 	expectedLine, _ := strconv.Atoi(lineNum)
 	expectedLine += 1
 
-	var specs map[string]string
+	specs := map[string]string{}
 
 	ast.Inspect(f, func(astNode ast.Node) bool {
 		node, ok := astNode.(*ast.GenDecl)
