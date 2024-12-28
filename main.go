@@ -19,23 +19,28 @@ import (
 //go:embed enum.go.template
 var t string
 
+//go:embed enum_db.go.template
+var tDb string
+
 func main() {
 	var (
 		typeName    string
+		db          bool
 		fileName    = os.Getenv("GOFILE")
 		lineNum     = os.Getenv("GOLINE")
 		packageName = os.Getenv("GOPACKAGE")
 	)
 	flag.StringVar(&typeName, "type", "", "type to be generated for")
+	flag.BoolVar(&db, "db", false, "generate db scanner/valuer")
 	flag.Parse()
 
-	if err := process(typeName, fileName, lineNum, packageName); err != nil {
+	if err := process(typeName, fileName, lineNum, packageName, db); err != nil {
 		os.Stderr.WriteString(err.Error() + "\n")
 		os.Exit(1)
 	}
 }
 
-func process(typeName, fileName, lineNum, packageName string) error {
+func process(typeName, fileName, lineNum, packageName string, db bool) error {
 	if typeName == "" || fileName == "" || lineNum == "" || packageName == "" {
 		return errors.New("missing parameters")
 	}
@@ -87,7 +92,14 @@ func process(typeName, fileName, lineNum, packageName string) error {
 		return errors.New(fileName + ": unable to find values for enum type: " + typeName)
 	}
 
-	tmpl, err := template.New(typeName).Parse(t)
+	var tmplFile string
+	if db {
+		tmplFile = tDb
+	} else {
+		tmplFile = t
+	}
+
+	tmpl, err := template.New(typeName).Parse(tmplFile)
 	if err != nil {
 		return err
 	}
