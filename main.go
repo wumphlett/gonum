@@ -1,4 +1,4 @@
-package gonum
+package main
 
 import (
 	_ "embed"
