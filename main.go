@@ -8,17 +8,20 @@ import (
 	"go/parser"
 	"go/token"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
+	"text/template"
+
+	"github.com/iancoleman/strcase"
 )
 
 //go:embed enum.go.template
-var template string
+var t string
 
 func main() {
 	var (
-		typeName string
-		// TODO case
+		typeName    string
 		fileName    = os.Getenv("GOFILE")
 		lineNum     = os.Getenv("GOLINE")
 		packageName = os.Getenv("GOPACKAGE")
@@ -27,7 +30,7 @@ func main() {
 	flag.Parse()
 
 	if err := process(typeName, fileName, lineNum, packageName); err != nil {
-		os.Stderr.WriteString(err.Error())
+		os.Stderr.WriteString(err.Error() + "\n")
 		os.Exit(1)
 	}
 }
@@ -51,7 +54,7 @@ func process(typeName, fileName, lineNum, packageName string) error {
 	expectedLine, _ := strconv.Atoi(lineNum)
 	expectedLine += 1
 
-	var specs [][2]string
+	var specs map[string]string
 
 	ast.Inspect(f, func(astNode ast.Node) bool {
 		node, ok := astNode.(*ast.GenDecl)
@@ -74,16 +77,7 @@ func process(typeName, fileName, lineNum, packageName string) error {
 				break
 			}
 
-			tag, ok := "", false
-			for _, field := range strings.Fields(spec.Comment.Text()) {
-				if strings.HasPrefix(field, "json:") {
-					tag, ok = field[len("json:\""):len(field)-1], true
-					break
-				}
-			}
-			if ok {
-				specs = append(specs, [2]string{spec.Names[0].Name, tag})
-			}
+			specs[spec.Names[0].Name] = strcase.ToSnake(strings.TrimPrefix(spec.Names[0].Name, typeName))
 		}
 
 		return false
@@ -92,6 +86,22 @@ func process(typeName, fileName, lineNum, packageName string) error {
 	if len(specs) == 0 {
 		return errors.New(fileName + ": unable to find values for enum type: " + typeName)
 	}
+
+	tmpl, err := template.New(typeName).Parse(t)
+	if err != nil {
+		return err
+	}
+
+	file, err := os.Create(filepath.Join(filepath.Dir(fileName), strcase.ToSnake(strings.ToLower(typeName))) + "_enum.go")
+	if err != nil {
+		panic(err)
+	}
+	defer file.Close()
+
+	tmpl.Execute(file, struct {
+		Type   string
+		Values map[string]string
+	}{typeName, specs})
 
 	return nil
 }
