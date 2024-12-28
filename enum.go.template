@@ -7,26 +7,21 @@ import "errors"
 var ErrUnknown{{.Type}} = errors.New("unknown {{.Type}}")
 
 func (e {{.Type}}) String() string {
-	switch e {
-	{{range $k, $v := .Values}}
-	case {{$k}}:
-	    return "{{$v}}"
-	{{end}}
+	switch e {  {{range $k, $v := .Values}}case {{$k}}:
+	    return "{{$v}}"{{end}}
 	default:
 		return ""
 	}
 }
 
 func (e {{.Type}}) MarshalText() ([]byte, error) {
-	return json.Marshal(e.String())
+	return []byte(e.String())
 }
 
-func (e *{{.Type}}) UnmarshalText(data []byte) error {
-    switch string(data) {
-    {{range $k, $v := .Values}}
+func (e *{{.Type}}) UnmarshalText(text []byte) error {
+    switch string(text) {   {{range $k, $v := .Values}}
     	case "{{$v}}":
-    	    *e = {{.Type}}(i)
-    	{{end}}
+    	    *e = {{$k}}(i){{end}}
     default:
         return ErrUnknown{{.Type}}
     }
