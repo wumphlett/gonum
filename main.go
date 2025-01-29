@@ -22,9 +22,6 @@ var t string
 //go:embed enum_text.go.template
 var tText string
 
-//go:embed enum_db.go.template
-var tDb string
-
 //go:embed enum_text_db.go.template
 var tTextDb string
 
@@ -118,12 +115,10 @@ func process(values Values, typeName, fileName, lineNum, packageName string, db,
 	}
 
 	var tmplFile string
-	if db && text {
+	if db {
 		tmplFile = tTextDb
-	} else if !db && text {
+	} else if text {
 		tmplFile = tText
-	} else if db && !text {
-		tmplFile = tDb
 	} else {
 		tmplFile = t
 	}

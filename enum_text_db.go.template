@@ -33,14 +33,13 @@ func (e *{{.Type}}) UnmarshalText(text []byte) error {
 }
 
 func (e *{{.Type}}) Scan(src any) error {
-	enum, ok := src.(int64)
+	enum, ok := src.(string)
 	if !ok {
 		return ErrUnknown{{.Type}}
 	}
-    *e = {{.Type}}(enum)
-	return nil
+	return e.UnmarshalText([]byte(enum))
 }
 
 func (e {{.Type}}) Value() (driver.Value, error) {
-	return int64(e), nil
+	return string(e), nil
 }
